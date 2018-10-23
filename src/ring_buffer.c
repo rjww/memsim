@@ -9,7 +9,7 @@
 
 */
 
-#include "../Headers/ring_buffer.h"
+#include "../headers/ring_buffer.h"
 #include <stdio.h>
 #include <string.h>
 
