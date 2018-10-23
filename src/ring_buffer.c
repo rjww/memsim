@@ -266,7 +266,85 @@ node *ReplaceARB(ring_buffer *Buffer, page *Page)
 
 node *ReplaceEARB(ring_buffer *Buffer, page *Page)
 {
-    return NULL;
+    node *Current, *BestCandidate;
+    uint Count;
+
+    // First pass. Check if page dirtiness is consistent across the buffer (that
+    // is, whether all pages are either modified or unmodified). Also find the
+    // best candidate for replacement as per the standard ARB algorithm.
+
+    Current = Buffer->Head;
+    BestCandidate = Current;
+    bool SameDirtiness = true;
+    bool Dirtiness = Current->Data->Modified;
+    Count = 0;
+
+    while (Count < Buffer->Length)
+    {
+        uint8 LowestPriority = BestCandidate->Data->ReferenceBits;
+        uint8 CurrentPriority = Current->Data->ReferenceBits;
+        if (CurrentPriority < LowestPriority) BestCandidate = Current;
+        if (Current->Data->Modified != Dirtiness) SameDirtiness = false;
+
+        Current = Current->Next;
+        ++Count;
+    }
+
+    // If the dirtiness of pages isn't the same across the buffer, and the best
+    // candidate for replacement is dirty, we need to make a second pass to look
+    // for an appropriate clean replacement candidate.
+    if (!SameDirtiness && BestCandidate->Data->Modified)
+    {
+        Current = Buffer->Head;
+        Count = 0;
+
+        // Second pass. Look for clean pages, and test their biased reference
+        // bits (right-shifted by 3) against the current (dirty) candidate. If
+        // the biased value of a clean page's reference bits is less than or
+        // equal to that of the dirty candidate's, the clean page becomes the
+        // new best candidate. After that, we continue to look for another clean
+        // candidate with a lower reference value than the current one, in the
+        // usual ARB fashion.
+        while (Count < Buffer->Length)
+        {
+            if (!Current->Data->Modified && BestCandidate->Data->Modified)
+            {
+                uint8 LowestPriority = BestCandidate->Data->ReferenceBits;
+                uint8 WeightedPriority = (Current->Data->ReferenceBits >> 3);
+                if (WeightedPriority <= LowestPriority)
+                {
+                    BestCandidate = Current;
+                }
+            }
+
+            else if (!Current->Data->Modified && !BestCandidate->Data->Modified)
+            {
+                uint8 LowestPriority = BestCandidate->Data->ReferenceBits;
+                uint8 CurrentPriority = Current->Data->ReferenceBits;
+                if (CurrentPriority < LowestPriority) BestCandidate = Current;
+            }
+
+            Current = Current->Next;
+            ++Count;
+        }
+    }
+
+    node *Victim = BestCandidate;
+
+    // Remove victim from the buffer.
+    Victim->Previous->Next = Victim->Next;
+    Victim->Next->Previous = Victim->Previous;
+    if (Victim == Buffer->Head) Buffer->Head = Victim->Next;
+    if (Victim == Buffer->Tail) Buffer->Tail = Victim->Previous;
+    --Buffer->Length;
+
+    // Add replacemnt to the tail of the buffer.
+    Append(Buffer, Page);
+
+    // Unlink and return the victim.
+    Victim->Next = NULL;
+    Victim->Previous = NULL;
+    return Victim;
 }
 
 void ShiftARB(ring_buffer *Buffer)

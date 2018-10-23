@@ -24,7 +24,7 @@ typedef uint8_t bool;
 #define false 0
 
 #define LINE_BUFFER_SIZE 32
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 #define __MEMSIM_H__
 #endif
