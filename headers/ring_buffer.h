@@ -7,6 +7,11 @@
     course  Operating Systems
     assign  Assignment 2: Virtual Memory Management
 
+    Typedefs and utility functions for a circular buffer type, used in the
+    program to represent the memory space of a computer system. Also included
+    here are page replacement algorithms used when inserting a new node into a
+    full buffer.
+
 */
 
 #ifndef __RING_BUFFER_H__

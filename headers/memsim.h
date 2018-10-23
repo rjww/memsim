@@ -7,6 +7,8 @@
     course  Operating Systems
     assign  Assignment 2: Virtual Memory Management
 
+    Libraries, typedefs and #defined constants shared by the program's modules.
+
 */
 
 #ifndef __MEMSIM_H__
