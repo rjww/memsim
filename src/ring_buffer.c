@@ -3,7 +3,6 @@
     :: ring_buffer.c
 
     author  Robert Woods <hi@robertwoods.me>
-            Trek Hopton <trek.hopton@gmail.com>
     course  Operating Systems
     assign  Assignment 2: Virtual Memory Management
 
@@ -70,6 +69,10 @@ node *Find(ring_buffer *Buffer, uint PageNumber)
     return NULL;
 }
 
+// If the buffer isn't full, the new page is appended to its tail. Otherwise,
+// the page replacement algorithm corresponding to the value of the Algorithm
+// argument is used to perform the replacement. If the insertion results in a
+// replacement, the victim page is returned; if not, a null value is returned.
 node *Insert(ring_buffer *Buffer, page *Page, char *Algorithm)
 {
     node *Victim = NULL;
@@ -118,6 +121,7 @@ void Append(ring_buffer *Buffer, page *Page)
     }
 }
 
+// Implements SC page replacement (see /headers/memsim.h for details).
 node *ReplaceSC(ring_buffer *Buffer, page *Page)
 {
     node *Current = Buffer->Head;
@@ -150,6 +154,7 @@ node *ReplaceSC(ring_buffer *Buffer, page *Page)
     return Victim;
 }
 
+// Implements ESC page replacement (see /headers/memsim.h for details).
 node *ReplaceESC(ring_buffer *Buffer, page *Page)
 {
     node *Current = NULL;
@@ -225,6 +230,7 @@ node *ReplaceESC(ring_buffer *Buffer, page *Page)
     return Victim;
 }
 
+// Implements ARB page replacement (see /headers/memsim.h for details).
 node *ReplaceARB(ring_buffer *Buffer, page *Page)
 {
     node *Current = Buffer->Head;
@@ -264,6 +270,7 @@ node *ReplaceARB(ring_buffer *Buffer, page *Page)
     return Victim;
 }
 
+// Implements EARB page replacement (see /headers/memsim.h for details).
 node *ReplaceEARB(ring_buffer *Buffer, page *Page)
 {
     node *Current, *BestCandidate;
@@ -347,13 +354,13 @@ node *ReplaceEARB(ring_buffer *Buffer, page *Page)
     return Victim;
 }
 
+// Performs a rightward bit shift on the reference bitstring of each page in
+// the buffer, per the ARB and EARB page replacement algorithms. 
 void ShiftARB(ring_buffer *Buffer)
 {
     node *Current = Buffer->Head;
     uint Count = 0;
 
-    // Step through each node in the buffer, and right-shfit the reference bits
-    // of its corresponding page.
     while (Count < Buffer->Length)
     {
         Current->Data->ReferenceBits >>= 1;

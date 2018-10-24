@@ -3,7 +3,6 @@
     :: memsim.c
 
     author  Robert Woods <hi@robertwoods.me>
-            Trek Hopton <trek.hopton@gmail.com>
     course  Operating Systems
     assign  Assignment 2: Virtual Memory Management
 
